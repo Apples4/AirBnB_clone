@@ -2,9 +2,9 @@
 
 """Importing dependancies"""
 import cmd
-import models
-from models.base_model import BaseModel
+from models import storage
 from models.engine.file_storage import FileStorage
+from models.base_model import BaseModel
 from models.user import User
 from models.state import State
 from models.city import City
@@ -50,11 +50,11 @@ class HBNBCommand(cmd.Cmd):
         else:
             clas_dict = {'BaseModel': BaseModel,
                          'User': User,
-                         'State': state,
-                         'City': city,
-                         'Amenity': amenity,
-                         'Place': place,
-                         'Review': review}
+                         'State': State,
+                         'City': City,
+                         'Amenity': Amenity,
+                         'Place': Place,
+                         'Review': Review}
             new_obj = clas_dict[args]()
             new_obj.save()
             print('{}'.format(new_obj.id))
@@ -64,7 +64,6 @@ class HBNBCommand(cmd.Cmd):
         Prints the string representation on the class name
         """
         args = args.split()
-        clas_dict = storage.all()
         if len(args) == 0:
             print("** class name missing **")
         elif args[0] not in HBNBCommand.__classes:
@@ -72,6 +71,7 @@ class HBNBCommand(cmd.Cmd):
         elif len(args) == 1:
             print("** instance id missing **")
         else:
+            clas_dict = storage.all()
             key = args[0] + "." + args[1]
             if key not in clas_dict.keys():
                 print("** no instance found **")
@@ -99,17 +99,14 @@ class HBNBCommand(cmd.Cmd):
     def do_all(self, args):
         """  Prints all string representation """
         args = args.split()
-        clas_dict = [str(val) for val in storage.all().values()]
-        if len(args) == 0:
-            print("{}".format(clas_dict))
-        elif args[0] not in HBNBCommand.__classes:
+        if args[0] in HBNBCommand.__classes:
+            str_list = []
+            objs = storage.all()
+            for instance in objs.values():
+                str_list.append(instance.__str__())
+            print(str_list)
+        else:
             print("** class doesn't exist **")
-
-        if args and args[0] in HBNBCommand.__classes:
-            clas_dict = storage.all()
-            clas_dict = [str(val) for key, val in clas_dict.items()
-                         if args[0] == val.__class__.__name__]
-            print(clas_dict)
 
     def do_update(self, args):
         """Updates an instance"""
