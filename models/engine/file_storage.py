@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 import json
+import os.path
 from models.base_model import BaseModel
 from models.user import User
 from models.city import City
@@ -36,29 +37,29 @@ class FileStorage:
         Params:
         obj - key and value for dict
         """
-        key = obj.__class__.__name__ + "." + obj.id
-        FileStorage.__objects[key] = obj
+        FSobj_dict = FileStorage.__objects
+        obj_name = obj.__class__.__name__
+        FSobj_dict["{}.{}".format(obj_name, obj.id)] = obj
 
     def save(self):
         """
         function that serialises to JSON file
         """
-        my_dict = {}
-        my_dict = {key: val.to_dict() for key,
-                   val in FileStorage.__objects.items()}
+        FSobj_dict = FileStorage.__objects
+        obj_dict = {obj: FSobj_dict[obj].to_dict()
+                    for obj in FSobj_dict.keys()}
         with open(FileStorage.__file_path, "w") as f:
-            json.dump(my_dict, f)
+            json.dump(obj_dict, f)
 
     def reload(self):
         """
         deserializes the JSON file to __objects
         """
-        try:
-            with open(FileStorage.__file_path, "r") as f:
-                objs = json.load(f)
-            for key, val in objs.items():
-                class_name = val.get('__class__')
-                obj = eval(class_name + '(**val)')
-                FileStorage.__objects[key] = obj
-        except FileNotFoundError:
-            pass
+        if os.path.exists(FileSotrage.__file_path):
+            with open(FileStorage.__file_path) as f:
+                obj_dict = json.load(f)
+                for obj in obj_dict.values():
+                    cls_d = obj['__class__']
+                    del obj['__class__']
+                    self.new(eval(cls_d)(**obj))
+            return
